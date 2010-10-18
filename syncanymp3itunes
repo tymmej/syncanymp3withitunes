@@ -18,7 +18,7 @@ let CUT1=$WIDTH2-18
 let CUT2=$CUT1-3
 ################################################################################
 
-####################################FUNCTIONS###################################
+###################################FUNCTIONS####################################
 #Leading zeros
 function leadingzeros {
 printf "%03d" $1
@@ -69,7 +69,7 @@ exit 1
 }
 ################################################################################
 
-#############################STEP 0: Exist?#####################################
+###################################STEP 0: Exists?##############################
 if [ ! -f "$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
 echo "Check variables (playlist/musicdir/dapdir) or connect DAP.
 Exit"
@@ -78,8 +78,7 @@ fi
 ################################################################################
 
 
-#########################STEP 1: Convert playlist###############################
-#Backup playlist
+###################################STEP 1: Convert playlist#####################
 cp "$PLAYLIST" "$PLAYLIST.bak"
 
 iconv -c -f UTF-16LE -t UTF8 "$PLAYLIST" > "$PLAYLIST.work"
@@ -88,18 +87,18 @@ tr '\r' '\n' < "$PLAYLIST" > "$PLAYLIST.work"
 mv "$PLAYLIST.work" "$PLAYLIST"
 ################################################################################
 
-##########################STEP 2: Get filenames#################################
+###################################STEP 2: Get filenames########################
 #On playlist
-awk -F\t '{ print $27 }' "$PLAYLIST" | sed -e '1d' | cut -c$MUSICDIRL- | sed -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/cowon.e2.1
+awk -F\t '{ print $27 }' "$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/cowon.e2.1
 #On DAP
 ls "$DAPDIR" | grep -v ^SYSTEM$ | sort > /tmp/cowon.e2.2
 ################################################################################
 
-#############################STEP 3: Differences################################
+###################################STEP 3: Differences##########################
 diff /tmp/cowon.e2.1 /tmp/cowon.e2.2 > /tmp/cowon.e2.3
 ################################################################################
 
-#############################STEP 4: Deleting###################################
+###################################STEP 4: Deleting#############################
 grep ">" /tmp/cowon.e2.3 | sed -e 's/> //g' > /tmp/cowon.e2.4
 
 I=1
@@ -134,7 +133,7 @@ done
 
 echo ""
 
-###########################STEP 5: Sizes and copying############################
+###################################STEP 5: Sizes and copying####################
 grep "<" /tmp/cowon.e2.3 | sed -e 's/< //g' > /tmp/cowon.e2.4
 
 I=1
@@ -156,7 +155,6 @@ $FILESIZE"
 done < /tmp/cowon.e2.4
 
 echo "$SIZES" | sed -e '1d' > /tmp/cowon.e2.sizes
-let SIZEM=$SIZE/1024
 #
 
 cat /tmp/cowon.e2.4 | while read f; do
@@ -186,7 +184,7 @@ $bar2\r"
 done
 ################################################################################
 
-#################################STEP 6: Ending#################################
+###################################STEP 6: Ending###############################
 echo "
 Removing temp files and restore playlist"
 mv "$PLAYLIST.bak" "$PLAYLIST"
