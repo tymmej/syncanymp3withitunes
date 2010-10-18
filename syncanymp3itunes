@@ -69,6 +69,15 @@ exit 1
 }
 ################################################################################
 
+#########################STEP 0: Exist?###############################
+if [ ! -f "$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
+echo "Check variables (playlist/musicdir/dapdir)
+Exit"
+exit 1
+fi
+################################################################################
+
+
 #########################STEP 1: Convert playlist###############################
 #Backup playlist
 cp "$PLAYLIST" "$PLAYLIST.bak"
