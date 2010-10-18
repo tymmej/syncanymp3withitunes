@@ -11,7 +11,7 @@ PLAYLIST="/Volumes/COWON E2/Cowon e2 2GB.txt"
 WIDTH2=80
 
 #Extra variables - do NOT touch
-MUSICDIRL=`echo "${#MUSICDIR}"`
+MUSICDIRL=${#MUSICDIR}
 let MUSICDIRL=$MUSICDIRL+3
 let WIDTH3=$WIDTH2-2
 let CUT1=$WIDTH2-18
@@ -111,14 +111,13 @@ if [ $ILE = 000 ]; then
 fi
 
 cat /tmp/cowon.e2.4 | while read f; do
-	h="$f"
-	h=`echo "$h" | sed -e 's/\.mp3//g'`
-	LENGTH=`echo "${#h}"`
+	h=`echo "$f" | sed -e 's/\.mp3//g'`
+	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
 		h="$h..."
 	else
-		diff=`expr $CUT1 - $LENGTH`
+		let diff=$CUT1-$LENGTH
 		while [ $diff -gt 0 ]; do
 			h="$h."
 			let diff--
@@ -139,7 +138,7 @@ echo ""
 grep "<" /tmp/cowon.e2.3 | sed -e 's/< //g' > /tmp/cowon.e2.4
 
 I=1
-ILE=`cat /tmp/cowon.e2.4 | wc -l | sed -e 's/ //g'`
+ILE=`wc -l /tmp/cowon.e2.4 | sed -e 's/ //g' -e 's/\/tmp\/cowon.e2.4//g'`
 ILE=`leadingzeros $ILE`
 
 if [ $ILE = 000 ]; then
@@ -162,14 +161,13 @@ let SIZEM=$SIZE/1024
 
 cat /tmp/cowon.e2.4 | while read f; do
 	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
-	h="$f"
 	h=`echo "$f" | sed -e 's/.mp3//g'`
-	LENGTH=`echo "${#h}"`
+	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
 		h="$h..."
 	else
-		diff=`expr $CUT1 - $LENGTH`
+		let diff=$CUT1-$LENGTH
 		while [ $diff -gt 0 ]; do
 			h="$h."
 			let diff--
