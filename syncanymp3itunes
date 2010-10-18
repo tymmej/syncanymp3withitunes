@@ -71,7 +71,7 @@ exit 1
 
 #############################STEP 0: Exist?#####################################
 if [ ! -f "$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
-echo "Check variables (playlist/musicdir/dapdir)
+echo "Check variables (playlist/musicdir/dapdir) or connect DAP.
 Exit"
 exit 1
 fi
