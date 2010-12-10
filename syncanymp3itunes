@@ -18,8 +18,8 @@
 ###################################VARIABLES#####################################
 #Variables
 MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
-DAPDIR="/Volumes/COWON E2/Music"
-PLAYLIST="/Volumes/COWON E2/Cowon e2 2GB.txt"
+DAPDIR="/Volumes/PHONE CARD/music/music"
+PLAYLIST="Hazel.txt"
 WIDTH2=80
 
 #Extra variables - do NOT touch
@@ -76,13 +76,13 @@ echo "$bar"
 
 trap ctrl_c INT
 function ctrl_c() {
-mv "$PLAYLIST.bak" "$PLAYLIST"
+mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 exit 1
 }
 ################################################################################
 
 ###################################STEP 0: Exists?##############################
-if [ ! -f "$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
+if [ ! -f "$DAPDIR/$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
 echo "Check variables (playlist/musicdir/dapdir) or connect DAP.
 Exit"
 exit 1
@@ -91,19 +91,19 @@ fi
 
 
 ###################################STEP 1: Convert playlist#####################
-cp "$PLAYLIST" "$PLAYLIST.bak"
+cp "$DAPDIR/$PLAYLIST" "$DAPDIR/$PLAYLIST.bak"
 
-iconv -c -f UTF-16LE -t UTF8 "$PLAYLIST" > "$PLAYLIST.work"
-mv "$PLAYLIST.work" "$PLAYLIST"
-tr '\r' '\n' < "$PLAYLIST" > "$PLAYLIST.work"
-mv "$PLAYLIST.work" "$PLAYLIST"
+iconv -c -f UTF-16LE -t UTF8 "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
+mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
+tr '\r' '\n' < "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
+mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 ################################################################################
 
 ###################################STEP 2: Get filenames########################
 #On playlist
-awk -F\t '{ print $27 }' "$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/cowon.e2.1
+awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/cowon.e2.1
 #On DAP
-ls "$DAPDIR" | grep -v ^SYSTEM$ | sort > /tmp/cowon.e2.2
+ls "$DAPDIR" | grep -v Hazel.txt | sort > /tmp/cowon.e2.2
 ################################################################################
 
 ###################################STEP 3: Differences##########################
@@ -199,8 +199,9 @@ done
 ###################################STEP 6: Ending###############################
 echo "
 Removing temp files and restore playlist"
-mv "$PLAYLIST.bak" "$PLAYLIST"
+mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 rm /tmp/cowon.e2*
+rm "$DAPDIR/._"*
 ################################################################################
 
 ###################################AUTHOR: Jakub Tymejczyk######################
