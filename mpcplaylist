@@ -1,0 +1,8 @@
+#!/bin/bash
+
+tr '\r' '\n' < ~/Downloads/Smart.m3u > ~/Downloads/Smart.d.m3u
+cat ~/Downloads/Smart.d.m3u | grep -v "^#" > ~/Downloads/Smart.m3u
+sed -e 's/Users\/jakubtymejczyk/nas/g' ~/Downloads/Smart.m3u > ~/Downloads/Smart.d.m3u
+iconv -f UTF8-MAC -t UTF8 < Smart.d.m3u > Smart.m3u
+
+scp ~/Downloads/Smart.m3u root@192.168.1.1:/nas/Others/mpd/Playlists/Smart.m3u
