@@ -1,10 +1,18 @@
 #!/bin/bash
 
-tr '\r' '\n' < ~/Downloads/Smart.m3u > ~/Downloads/Smart.d.m3u
-cat ~/Downloads/Smart.d.m3u | grep -v "^#" > ~/Downloads/Smart.m3u
-sed -e 's/Users\/jakubtymejczyk/mnt\/samba/g' ~/Downloads/Smart.m3u > ~/Downloads/Smart.d.m3u
-/usr/bin/iconv -f UTF8-MAC -t UTF8 < ~/Downloads/Smart.d.m3u > ~/Downloads/Smart.m3u
+USER="root"
+ADDRESS="192.168.1.7
+PATHREMOTE="/etc/mpd/Playlists"
+PATHLOCAL="~/Downloads"
+PLAYLIST="Smart.m3u"
+SEDLOCAL="Users\/jakubtymejczyk"
+SEDREMOTE="mnt\/samba"
 
-scp ~/Downloads/Smart.m3u root@192.168.1.7:/etc/mpd/Playlists/Smart.m3u
+tr '\r' '\n' < "$PATHLOCAL/$PLAYLIST" > "PATHLOCAL/$PLAYLIST.tmp"
+cat "$PATHLOCAL/$PLAYLIST.tmp" | grep -v "^#" > "$PATHLOCAL/$PLAYLIST"
+sed -e 's/$SEDLOCAL/$SEDREMOTE/g' "$PATHLOCAL/$PLAYLIST > "$PATHLOCAL/$PLAYLIST.tmp"
+/usr/bin/iconv -f UTF8-MAC -t UTF8 < "$PATHLOCAL/$PLAYLIST" > "$PATHLOCAL/$PLAYLIST"
 
-rm ~/Downloads/Smart.m3u ~/Downloads/Smart.d.m3u
+scp "$PATHLOCAL/$PLAYLIST" "$USER@$ADDRESS:$PATHREMOTE"
+
+rm "$PATHLOCAL/$PLAYLIST" "$PATHLOCAL/$PLAYLIST.tmp"
