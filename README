@@ -1,17 +1,18 @@
+#syncanymp3itunes
 Założenie:
 mamy dowolną empepiętnastkę widoczną jako dysk. Jednocześnie lubimy iTunesa i mamy playlistę z którą chcemy zsynchronizować nasz odtwarzacz. Muzyka zarządzana przez iTunes i ładnie poukładana przez niego w katalogach.
 
 Dodatkowe założenia:
-Playlista to "smart playlist" z rozmiarem nie większym niż nasz odtwarzacz.
+Playlista to "smart playlist" (lub zwykła) z rozmiarem nie większym niż nasz odtwarzacz.
 Synchronizacja tylko z jedną playlistą.
 Lubimy tryb shuffle.
 Możemy się pogodzić, że trzeba ręcznie ją wyeksportować.
 
 Sposób użycia:
 iTunes:
-otwieramy naszą playlistę, File->Library->Export playlist, unicode text
+otwieramy naszą playlistę, File->Library->Export playlist, unicode text. Zapisujemu do folderu, gdzie mają trafić pliki.
 Terminal:
-/ścieżka/do/skryptu (wcześniej dopasować zmienne)
+/ścieżka/do/skryptu /sciezka/do/folderu/z/mp3
 
 Wymiana piosenek:
 iTunes:
@@ -21,7 +22,9 @@ Dodatkowe informacje:
 Tak, wiem. Kod wygląda okropnie.
 Tak, wiem. Można to zrobić lepiej.
 
-W miarę przetestowane. Działa.
 Pasek postępu i procenty są na podstawie rozmiaru plików.
 Wszystko zrobione samodzielnie.
 
+#convertandcopy
+Jak syncanymp3itunes, tylko playlista może mieć rozmiar większy niż pamięć naszego odtwarzacza. O ile większa? Kwestia wyczucia i bitratu oryginalnych plików.
+Działa jak "Convert to AAC" w iTunes, tylko konwertuje do lame -V4.
