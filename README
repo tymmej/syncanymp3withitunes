@@ -28,3 +28,7 @@ Wszystko zrobione samodzielnie.
 #convertandcopy
 Jak syncanymp3itunes, tylko playlista może mieć rozmiar większy niż pamięć naszego odtwarzacza. O ile większa? Kwestia wyczucia i bitratu oryginalnych plików.
 Działa jak "Convert to AAC" w iTunes, tylko konwertuje do lame -V4.
+
+#mpcplaylist
+Kopiuje playlistę na zdalny serwer.
+Potrzeba iconv z macports.
