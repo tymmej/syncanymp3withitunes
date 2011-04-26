@@ -4,7 +4,7 @@ USER="root"
 ADDRESS="192.168.1.7"
 PATHREMOTE="/etc/mpd/Playlists"
 PATHLOCAL="~/Downloads"
-PLAYLIST="Smart.m3u"
+PLAYLIST="Smart.m3u8"
 SEDLOCAL="Users\/jakubtymejczyk"
 SEDREMOTE="mnt\/samba"
 
