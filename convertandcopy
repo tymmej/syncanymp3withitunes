@@ -108,7 +108,6 @@ mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 #On playlist
 awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/sync.1
 #On DAP
-#find "$DAPDIR" -type f -name "*mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g'
 find "$DAPDIR" -type f -name "*.mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g' > /tmp/sync.2
 ################################################################################
 
