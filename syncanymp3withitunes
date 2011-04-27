@@ -165,6 +165,7 @@ diff /tmp/sync.1 /tmp/sync.2 > /tmp/sync.3
 
 ###################################STEP 4: Deleting#############################
 grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4
+grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4.t
 I=1
 ILE=`cat /tmp/sync.4 | wc -l | sed -e 's/ //g'`
 ILE=`leadingzeros $ILE`
@@ -174,7 +175,7 @@ if [ $ILE = 000 ]; then
 fi
 
 cat /tmp/sync.4 | while read f; do
-	g=`echo "$f" | sed -e 's/:/\//g'`
+	g=`echo "$f" | sed -e 's/\:/\//g'`
 	h=`echo "$f" | sed -e 's/\.mp3//g'`
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
@@ -191,7 +192,7 @@ cat /tmp/sync.4 | while read f; do
 	PERCENT=`leadingzeros $PERCENT`
 	IE=`leadingzeros $I`
 	echo "$IE/$ILE ($PERCENT%): < $h"
-#	rm "$DAPDIR/$g"
+	rm "$DAPDIR/$g"
 	let I++
 done
 ################################################################################
@@ -212,7 +213,7 @@ fi
 #Get sizes of files
 SIZE=0
 while read f; do
-	g=`echo $f`
+	g=`echo $f | sed -e 's/\:/\//g'`
 	FILESIZE=`du -k "$MUSICDIR/$g" | awk '{ print $1 }'`
 	let SIZE=$SIZE+$FILESIZE
 	SIZES="$SIZES
@@ -222,7 +223,7 @@ done < /tmp/sync.4
 echo "$SIZES" | sed -e '1d' > /tmp/sync.sizes
 
 while read f; do
-	g=`echo "$f"`
+	g=`echo $f | sed -e 's/\:/\//g'`
 	h=`echo "$f" | sed -e 's/.mp3//g'`
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
@@ -244,7 +245,7 @@ while read f; do
 	echo -ne "$IE/$ILE ($PERCENTE%): > $h
 $bar2\r"
 	MP3DIR=`echo "$g" | awk -F \/ '{ print $1"\/"$2 }'`
-	if [ ! -d "$MP3DIR" ]; then
+	if [ ! -d "$DAPDIR/$MP3DIR" ]; then
 		mkdir -p "$DAPDIR/$MP3DIR"
 		cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
 	fi
@@ -265,7 +266,7 @@ done < /tmp/sync.4
 echo "
 Removing temp files and restore playlist"
 mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
-#rm /tmp/sync*
+rm /tmp/sync*
 rm "$DAPDIR/._"*
 find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec \
 	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \; -print -exec rm -rf {} \;
