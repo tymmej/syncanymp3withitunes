@@ -165,7 +165,6 @@ diff /tmp/sync.1 /tmp/sync.2 > /tmp/sync.3
 
 ###################################STEP 4: Deleting#############################
 grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4
-grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4.t
 I=1
 ILE=`cat /tmp/sync.4 | wc -l | sed -e 's/ //g'`
 ILE=`leadingzeros $ILE`
