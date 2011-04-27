@@ -1,0 +1,274 @@
+#!/bin/bash
+
+###################################USAGE#########################################
+#/path/to/script "path to dap"
+##################################################################################
+
+###################################LICENSE#######################################
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#################################################################################
+
+###################################VARIABLES#####################################
+#Variables
+MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
+COVERDIR="/Users/jakubtymejczyk/Music/Covers"
+DAPDIR=
+PLAYLIST="Card.txt"
+WIDTH2=80
+BITRATE=4
+CONVERT=0
+
+#Extra variables - do NOT touch
+MUSICDIRL=${#MUSICDIR}
+let MUSICDIRL=$MUSICDIRL+3
+let WIDTH3=$WIDTH2-2
+let CUT1=$WIDTH2-18
+let CUT2=$CUT1-3
+################################################################################
+
+###################################FUNCTIONS####################################
+#Leading zeros
+function leadingzeros {
+printf "%03d" $1
+}
+
+#progress
+function progress {
+PERCENT=$1
+WIDTH=$2
+
+let WIDTH=$WIDTH-1
+let PRZED=($PERCENT*$WIDTH)/100
+let PO=$WIDTH-$PRZED-2
+
+bar="["
+
+if [ $PRZED -gt 0 ]; then
+	for i in $(eval echo {0..$PRZED}); do
+		bar="$bar="
+	done
+else
+	let PO=$PO+1
+fi
+
+if [ $PRZED -ne $WIDTH ]; then
+	bar="$bar>"
+fi
+
+if [ $PO = 0 ]; then
+	bar="$bar-"
+fi
+
+if [ $PO -gt 0 ]; then
+	for i in $(eval echo {0..$PO}); do
+		bar="$bar-" 
+	done
+fi
+
+bar="$bar]"
+
+echo "$bar"
+}
+
+trap ctrl_c INT
+function ctrl_c() {
+mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
+exit 1
+}
+################################################################################
+
+###################################STEP -1: Options#############################
+while getopts "hp:c:b:" OPTION
+do
+case $OPTION in
+	h)
+		echo "syncanymp3with iTunes
+Usage:
+$0
+-p pathtodap
+-c convert [0|1]
+-b bitrate [0..9]"
+		exit 1
+		;;
+	p)
+		DAPDIR="$OPTARG"
+		;;
+	c)
+		CONVERT="$OPTARG"
+		;;
+	b)
+		BITRATE="$OPTARG"
+		;;
+	?)
+		usage
+		exit
+		;;
+	esac
+done
+
+################################################################################
+
+###################################STEP 0: Exists?##############################
+if [ ! -f "$DAPDIR/$PLAYLIST" -o ! -d "$DAPDIR" -o ! -d "$MUSICDIR" ]; then
+echo "Check variables or connect DAP.
+Exit"
+exit 1
+fi
+################################################################################
+
+###################################STEP 0.5: Values#############################
+echo "syncanymp3withitunes
+Values:
+Local path: $MUSICDIR
+Covers path: $COVERDIR
+DAP path: $DAPDIR
+Playlist: $PLAYLIST
+Convert: $CONVERT"
+if [ $CONVERT = 1 ]; then
+	echo "Bitrate: V$BITRATE"
+fi
+echo "-------------------------------"
+################################################################################
+
+###################################STEP 1: Convert playlist#####################
+cp "$DAPDIR/$PLAYLIST" "$DAPDIR/$PLAYLIST.bak"
+
+iconv -c -f UTF-16LE -t UTF-8 "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
+mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
+tr '\r' '\n' < "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
+mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
+################################################################################
+
+###################################STEP 2: Get filenames########################
+#On playlist
+awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/sync.1
+#On DAP
+find "$DAPDIR" -type f -name "*.mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g' > /tmp/sync.2
+################################################################################
+
+###################################STEP 3: Differences##########################
+diff /tmp/sync.1 /tmp/sync.2 > /tmp/sync.3
+################################################################################
+
+###################################STEP 4: Deleting#############################
+grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4
+I=1
+ILE=`cat /tmp/sync.4 | wc -l | sed -e 's/ //g'`
+ILE=`leadingzeros $ILE`
+
+if [ $ILE = 000 ]; then
+	echo -ne "Nothing to delete\r"
+fi
+
+cat /tmp/sync.4 | while read f; do
+	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
+	h=`echo "$f" | sed -e 's/\.mp3//g'`
+	LENGTH=${#h}
+	if [ $LENGTH -gt $CUT1 ]; then
+		h=`echo "$h" | cut -c-$CUT2`
+		h="$h..."
+	else
+		let diff=$CUT1-$LENGTH
+		while [ $diff -gt 0 ]; do
+			h="$h."
+			let diff--
+		done
+	fi
+	let PERCENT=($I*100)/$ILE
+	PERCENT=`leadingzeros $PERCENT`
+	IE=`leadingzeros $I`
+	echo "$IE/$ILE ($PERCENT%): < $h"
+	rm "$DAPDIR/$g"
+	let I++
+done
+################################################################################
+
+echo ""
+
+###################################STEP 5: Sizes and copying####################
+grep "<" /tmp/sync.3 | sed -e 's/< //g' > /tmp/sync.4
+
+I=1
+ILE=`wc -l /tmp/sync.4 | sed -e 's/ //g' -e 's/\/tmp\/sync.4//g'`
+ILE=`leadingzeros $ILE`
+
+if [ $ILE = 000 ]; then
+	echo -ne "Nothing to copy\r"
+fi
+
+#Get sizes of files
+SIZE=0
+while read f; do
+	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
+	FILESIZE=`du -k "$MUSICDIR/$g" | awk '{ print $1 }'`
+	let SIZE=$SIZE+$FILESIZE
+	SIZES="$SIZES
+$FILESIZE"
+done < /tmp/sync.4
+
+echo "$SIZES" | sed -e '1d' > /tmp/sync.sizes
+#
+
+while read f; do
+	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
+	h=`echo "$f" | sed -e 's/.mp3//g'`
+	LENGTH=${#h}
+	if [ $LENGTH -gt $CUT1 ]; then
+		h=`echo "$h" | cut -c-$CUT2`
+		h="$h..."
+	else
+		let diff=$CUT1-$LENGTH
+		while [ $diff -gt 0 ]; do
+			h="$h."
+			let diff--
+		done
+	fi
+	ACSIZE=`sed -n ''$I'p' /tmp/sync.sizes`
+	let PROGRESS=$PROGRESS+$ACSIZE
+	let PERCENT=($PROGRESS*100)/$SIZE
+	PERCENTE=`leadingzeros $PERCENT`
+	IE=`leadingzeros $I`
+	bar2=`progress $PERCENT $WIDTH3`
+	echo -ne "$IE/$ILE ($PERCENTE%): > $h
+$bar2\r"
+	MP3DIR=`echo "$g" | awk -F \/ '{ print $1"\/"$2 }'`
+		if [ ! -d "$MP3DIR" ]; then
+			mkdir -p "$DAPDIR/$MP3DIR"
+			cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
+		fi
+	if [ $CONVERT = 1 ] ; then
+		cp "$MUSICDIR/$g" "/tmp/$f"
+		lame --quiet -V$BITRATE "/tmp/$f" "/tmp/$f-low"
+		cp "/tmp/$f-low" "$DAPDIR/$g"
+		rm "/tmp/$f" "/tmp/$f-low"
+	else
+		cp "$MUSICDIR/$g" "$DAPDIR/$g"
+	fi
+	id3cp "$MUSICDIR/$g" "$DAPDIR/$g" > /dev/null
+	let I++
+done < /tmp/sync.4
+################################################################################
+
+###################################STEP 6: Ending###############################
+echo "
+Removing temp files and restore playlist"
+mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
+rm /tmp/sync*
+rm "$DAPDIR/._"*
+find "$DAPDIR" -type d -empty -exec rm -rf {} \;
+#/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
+find "$DAPDIR" -type d -empty -exec rm -rf {} \;
+################################################################################
+
+###################################AUTHOR: Jakub Tymejczyk######################
