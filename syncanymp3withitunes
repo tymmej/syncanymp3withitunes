@@ -266,7 +266,7 @@ echo "
 Removing temp files and restore playlist"
 mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 rm /tmp/sync*
-rm "$DAPDIR/._"*
+#rm "$DAPDIR/._"*
 find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec \
 	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \;  -exec rm -rf {} \;
 #/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
