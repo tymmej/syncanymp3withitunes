@@ -198,7 +198,7 @@ cat /tmp/cowon.e2.4 | while read f; do
 $bar2\r"
 	cp "$MUSICDIR/$g" "/tmp/$f"
 	lame --quiet -V4 "/tmp/$f" "/tmp/$f-low"
-	id3cp "$MUSICDIR/$g" "/tmp/$f-low"
+	id3cp "$MUSICDIR/$g" "/tmp/$f-low" > /dev/null
 	cp "/tmp/$f-low" "$DAPDIR/$f"
 	rm "/tmp/$f" "/tmp/$f-low"
 	let I++
