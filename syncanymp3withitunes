@@ -1,10 +1,10 @@
 #!/bin/bash
 
-###################################USAGE#########################################
+###################################USAGE########################################
 #/path/to/script "path to dap"
-##################################################################################
+################################################################################
 
-###################################LICENSE#######################################
+###################################LICENSE######################################
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
 #the Free Software Foundation, either version 3 of the License, or
@@ -17,9 +17,9 @@
 #
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#################################################################################
+################################################################################
 
-###################################VARIABLES#####################################
+###################################VARIABLES####################################
 #Variables
 MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
 COVERDIR="/Users/jakubtymejczyk/Music/Covers"
@@ -152,9 +152,11 @@ mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 
 ###################################STEP 2: Get filenames########################
 #On playlist
-awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/sync.1
+awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | \
+	sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/sync.1
 #On DAP
-find "$DAPDIR" -type f -name "*.mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g' > /tmp/sync.2
+find "$DAPDIR" -type f -name "*.mp3" | sort | \
+	sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g' > /tmp/sync.2
 ################################################################################
 
 ###################################STEP 3: Differences##########################
@@ -266,10 +268,10 @@ Removing temp files and restore playlist"
 mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 rm /tmp/sync*
 rm "$DAPDIR/._"*
-find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \; -print -exec rm -rf {} \;
+find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec \
+	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \; -print -exec rm -rf {} \;
 #/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
 find "$DAPDIR" -type d -empty -mindepth 1 -maxdepth 1 -exec rm -rf {} \;
 ################################################################################
 
 ###################################AUTHOR: Jakub Tymejczyk######################
-
