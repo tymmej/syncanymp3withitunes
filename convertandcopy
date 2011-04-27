@@ -22,12 +22,12 @@
 ###################################VARIABLES#####################################
 #Variables
 MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
+COVERDIR="/Users/jakubtymejczyk/Music/Covers"
 DAPDIR="$1"
 PLAYLIST="Card.txt"
 WIDTH2=80
 
 #Extra variables - do NOT touch
-f=""
 MUSICDIRL=${#MUSICDIR}
 let MUSICDIRL=$MUSICDIRL+3
 let WIDTH3=$WIDTH2-2
@@ -106,27 +106,28 @@ mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 
 ###################################STEP 2: Get filenames########################
 #On playlist
-awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/cowon.e2.1
+awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | sed -e '1d' -e 's/ - /\~/g' -e 's/:/ - /g' | sort > /tmp/sync.1
 #On DAP
-ls "$DAPDIR" | grep -v Card.txt | sort > /tmp/cowon.e2.2
+#find "$DAPDIR" -type f -name "*mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g'
+find "$DAPDIR" -type f -name "*.mp3" | sort | sed -e 's:'$DAPDIR'/::g' -e 's/\// - /g' > /tmp/sync.2
 ################################################################################
 
 ###################################STEP 3: Differences##########################
-diff /tmp/cowon.e2.1 /tmp/cowon.e2.2 > /tmp/cowon.e2.3
+diff /tmp/sync.1 /tmp/sync.2 > /tmp/sync.3
 ################################################################################
 
 ###################################STEP 4: Deleting#############################
-grep ">" /tmp/cowon.e2.3 | sed -e 's/> //g' > /tmp/cowon.e2.4
-
+grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4
 I=1
-ILE=`cat /tmp/cowon.e2.4 | wc -l | sed -e 's/ //g'`
+ILE=`cat /tmp/sync.4 | wc -l | sed -e 's/ //g'`
 ILE=`leadingzeros $ILE`
 
 if [ $ILE = 000 ]; then
 	echo -ne "Nothing to delete\r"
 fi
 
-cat /tmp/cowon.e2.4 | while read f; do
+cat /tmp/sync.4 | while read f; do
+	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
 	h=`echo "$f" | sed -e 's/\.mp3//g'`
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
@@ -143,7 +144,7 @@ cat /tmp/cowon.e2.4 | while read f; do
 	PERCENT=`leadingzeros $PERCENT`
 	IE=`leadingzeros $I`
 	echo "$IE/$ILE ($PERCENT%): < $h"
-	rm "$DAPDIR/$f"
+	rm "$DAPDIR/$g"
 	let I++
 done
 ################################################################################
@@ -151,10 +152,10 @@ done
 echo ""
 
 ###################################STEP 5: Sizes and copying####################
-grep "<" /tmp/cowon.e2.3 | sed -e 's/< //g' > /tmp/cowon.e2.4
+grep "<" /tmp/sync.3 | sed -e 's/< //g' > /tmp/sync.4
 
 I=1
-ILE=`wc -l /tmp/cowon.e2.4 | sed -e 's/ //g' -e 's/\/tmp\/cowon.e2.4//g'`
+ILE=`wc -l /tmp/sync.4 | sed -e 's/ //g' -e 's/\/tmp\/sync.4//g'`
 ILE=`leadingzeros $ILE`
 
 if [ $ILE = 000 ]; then
@@ -169,12 +170,12 @@ while read f; do
 	let SIZE=$SIZE+$FILESIZE
 	SIZES="$SIZES
 $FILESIZE"
-done < /tmp/cowon.e2.4
+done < /tmp/sync.4
 
-echo "$SIZES" | sed -e '1d' > /tmp/cowon.e2.sizes
+echo "$SIZES" | sed -e '1d' > /tmp/sync.sizes
 #
 
-cat /tmp/cowon.e2.4 | while read f; do
+while read f; do
 	g=`echo $f | sed -e 's/ - /\//g' -e 's/\~/ - /g'`
 	h=`echo "$f" | sed -e 's/.mp3//g'`
 	LENGTH=${#h}
@@ -188,7 +189,7 @@ cat /tmp/cowon.e2.4 | while read f; do
 			let diff--
 		done
 	fi
-	ACSIZE=`sed -n ''$I'p' /tmp/cowon.e2.sizes`
+	ACSIZE=`sed -n ''$I'p' /tmp/sync.sizes`
 	let PROGRESS=$PROGRESS+$ACSIZE
 	let PERCENT=($PROGRESS*100)/$SIZE
 	PERCENTE=`leadingzeros $PERCENT`
@@ -199,18 +200,26 @@ $bar2\r"
 	cp "$MUSICDIR/$g" "/tmp/$f"
 	lame --quiet -V4 "/tmp/$f" "/tmp/$f-low"
 	id3cp "$MUSICDIR/$g" "/tmp/$f-low" > /dev/null
-	cp "/tmp/$f-low" "$DAPDIR/$f"
+	MP3DIR=`echo "$g" | awk -F \/ '{ print $1"\/"$2 }'`
+	if [ ! -d "$MP3DIR" ]; then
+		mkdir -p "$DAPDIR/$MP3DIR"
+		cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
+	fi
+	cp "/tmp/$f-low" "$DAPDIR/$g"
 	rm "/tmp/$f" "/tmp/$f-low"
 	let I++
-done
+done < /tmp/sync.4
 ################################################################################
 
 ###################################STEP 6: Ending###############################
 echo "
 Removing temp files and restore playlist"
 mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
-rm /tmp/cowon.e2*
+rm /tmp/sync*
 rm "$DAPDIR/._"*
+find "$DAPDIR" -type d -empty -exec rm -rf {} \;
+#/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
+find "$DAPDIR" -type d -empty -exec rm -rf {} \;
 ################################################################################
 
 ###################################AUTHOR: Jakub Tymejczyk######################
