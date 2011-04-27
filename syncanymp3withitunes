@@ -268,7 +268,7 @@ mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 rm /tmp/sync*
 rm "$DAPDIR/._"*
 find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec \
-	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \; -print -exec rm -rf {} \;
+	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \;  -exec rm -rf {} \;
 #/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
 find "$DAPDIR" -type d -empty -mindepth 1 -maxdepth 1 -exec rm -rf {} \;
 ################################################################################
