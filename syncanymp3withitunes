@@ -222,8 +222,26 @@ done < /tmp/sync.4
 echo "$SIZES" | sed -e '1d' > /tmp/sync.sizes
 
 while read f; do
-	g=`echo $f | sed -e 's/\:/\//g'`
+	g=`echo "$f" | sed -e 's/\:/\//g'`
 	h=`echo "$f" | sed -e 's/.mp3//g'`
+	if [ $CONVERT = 1 ] ; then
+		DISC=1
+		ARTIST=`echo "$h" | awk -F \: '{ print $1}' | \
+			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+		ALBUM=`echo "$h" | awk -F \: '{ print $2}' | \
+			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+		TRACK=`echo "$h" | awk -F \: '{ print $3}' | awk -F " " '{ print $1}'`
+		if [ `echo "$TRACK" | grep "-" | wc -l` -eq 1 ]; then
+			TRACK=`echo "$h" | awk -F \: '{ print $3}' | \
+				awk -F " " '{ print $1}' | \
+				awk -F "-" '{ print $2}'`
+			DISC=`echo "$h" | awk -F \: '{ print $3}' | \
+				awk -F " " '{ print $1}' | \
+				awk -F "-" '{ print $1}'`
+		fi
+		TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c4- | \
+			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+	fi
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
@@ -251,12 +269,16 @@ $bar2\r"
 	if [ $CONVERT = 1 ] ; then
 		cp "$MUSICDIR/$g" "/tmp/$f"
 		lame --quiet -V$BITRATE "/tmp/$f" "/tmp/$f-low"
+		eyeD3 -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
+			--set-text-frame=TPOS:$DISC \
+			--add-image="$COVERDIR/$ARTIST/$ALBUM"/cover.jpg:FRONT_COVER \
+			"/tmp/$f-low" \
+			&> /dev/null
 		cp "/tmp/$f-low" "$DAPDIR/$g"
 		rm "/tmp/$f" "/tmp/$f-low"
 	else
 		cp "$MUSICDIR/$g" "$DAPDIR/$g"
 	fi
-	id3cp "$MUSICDIR/$g" "$DAPDIR/$g" > /dev/null
 	let I++
 done < /tmp/sync.4
 ################################################################################
