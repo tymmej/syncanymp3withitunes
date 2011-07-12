@@ -24,10 +24,11 @@
 MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
 COVERDIR="/Users/jakubtymejczyk/Music/Covers"
 DAPDIR=
-PLAYLIST="Card.txt"
+PLAYLIST="oldShuffle.txt"
 WIDTH2=80
 BITRATE=4
 CONVERT=0
+FOLDER=0
 
 #Extra variables - do NOT touch
 MUSICDIRL=${#MUSICDIR}
@@ -89,7 +90,7 @@ exit 1
 ################################################################################
 
 ###################################STEP -1: Options#############################
-while getopts "hp:c:b:" OPTION
+while getopts "hp:cfb:" OPTION
 do
 case $OPTION in
 	h)
@@ -97,12 +98,16 @@ case $OPTION in
 Usage:
 $0
 -p pathtodap
--c convert [0|1]
+-c convert [true]
+-f covers [true]
 -b bitrate [0..9]"
 		exit 1
 		;;
 	p)
 		DAPDIR="$OPTARG"
+		;;
+	f)
+		FOLDER="1"
 		;;
 	c)
 		CONVERT="$OPTARG"
@@ -264,7 +269,9 @@ $bar2\r"
 	MP3DIR=`echo "$g" | awk -F \/ '{ print $1"\/"$2 }'`
 	if [ ! -d "$DAPDIR/$MP3DIR" ]; then
 		mkdir -p "$DAPDIR/$MP3DIR"
-		cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
+		if [ $FOLDER -eq 1 ]; then
+			cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
+		fi
 	fi
 	if [ $CONVERT = 1 ] ; then
 		cp "$MUSICDIR/$g" "/tmp/$f"
