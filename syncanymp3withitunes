@@ -22,9 +22,9 @@
 ###################################VARIABLES####################################
 #Variables
 MUSICDIR="/Users/jakubtymejczyk/Music/iTunes/iTunes Media/Music"
-COVERDIR="/Users/jakubtymejczyk/Music/Covers"
+#COVERDIR="/Users/jakubtymejczyk/Music/Covers"
 DAPDIR=
-PLAYLIST="oldShuffle.txt"
+PLAYLIST="Galaxy.txt"
 WIDTH2=80
 BITRATE=4
 CONVERT=0
@@ -32,7 +32,7 @@ FOLDER=0
 
 #Extra variables - do NOT touch
 MUSICDIRL=${#MUSICDIR}
-let MUSICDIRL=$MUSICDIRL+3
+let MUSICDIRL=$MUSICDIRL+5
 let WIDTH3=$WIDTH2-2
 let CUT1=$WIDTH2-18
 let CUT2=$CUT1-3
@@ -90,7 +90,7 @@ exit 1
 ################################################################################
 
 ###################################STEP -1: Options#############################
-while getopts "hp:cfb:" OPTION
+while getopts "hp:P:cfb:" OPTION
 do
 case $OPTION in
 	h)
@@ -98,6 +98,7 @@ case $OPTION in
 Usage:
 $0
 -p pathtodap
+-P playlist
 -c convert [true]
 -f covers [true]
 -b bitrate [0..9]"
@@ -105,6 +106,9 @@ $0
 		;;
 	p)
 		DAPDIR="$OPTARG"
+		;;
+	P)
+		PLAYLIST="$OPTARG"
 		;;
 	f)
 		FOLDER="1"
@@ -148,7 +152,6 @@ echo "-------------------------------"
 
 ###################################STEP 1: Convert playlist#####################
 cp "$DAPDIR/$PLAYLIST" "$DAPDIR/$PLAYLIST.bak"
-
 iconv -c -f UTF-16LE -t UTF-8 "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
 mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 tr '\r' '\n' < "$DAPDIR/$PLAYLIST" > "$DAPDIR/$PLAYLIST.work"
@@ -157,11 +160,12 @@ mv "$DAPDIR/$PLAYLIST.work" "$DAPDIR/$PLAYLIST"
 
 ###################################STEP 2: Get filenames########################
 #On playlist
-awk -F\t '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | \
-	sed -e '1d' | sort > /tmp/sync.1
+awk -F'\t' '{ print $27 }' "$DAPDIR/$PLAYLIST" | cut -c$MUSICDIRL- | \
+	sed -e '1d' -e '/^$/ d' | sort > /tmp/sync.1
+
 #On DAP
 find "$DAPDIR" -type f -name "*.mp3" | sort | \
-	sed -e 's:'$DAPDIR'/::g' -e 's/\//:/g' > /tmp/sync.2
+	sed -e 's:'"$DAPDIR"'/::g' -e 's/\//:/g' > /tmp/sync.2
 ################################################################################
 
 ###################################STEP 3: Differences##########################
@@ -172,11 +176,12 @@ diff /tmp/sync.1 /tmp/sync.2 > /tmp/sync.3
 grep ">" /tmp/sync.3 | sed -e 's/> //g' > /tmp/sync.4
 I=1
 ILE=`cat /tmp/sync.4 | wc -l | sed -e 's/ //g'`
-ILE=`leadingzeros $ILE`
 
-if [ $ILE = 000 ]; then
+if [ $ILE = 0 ]; then
 	echo -ne "Nothing to delete\r"
 fi
+
+ILE=`leadingzeros $ILE`
 
 cat /tmp/sync.4 | while read f; do
 	g=`echo "$f" | sed -e 's/\:/\//g'`
@@ -196,7 +201,7 @@ cat /tmp/sync.4 | while read f; do
 	PERCENT=`leadingzeros $PERCENT`
 	IE=`leadingzeros $I`
 	echo "$IE/$ILE ($PERCENT%): < $h"
-	rm "$DAPDIR/$g"
+	rm "$g"
 	let I++
 done
 ################################################################################
@@ -208,11 +213,12 @@ grep "<" /tmp/sync.3 | sed -e 's/< //g' > /tmp/sync.4
 
 I=1
 ILE=`wc -l /tmp/sync.4 | sed -e 's/ //g' -e 's/\/tmp\/sync.4//g'`
-ILE=`leadingzeros $ILE`
 
-if [ $ILE = 000 ]; then
+if [ $ILE = 0 ]; then
 	echo -ne "Nothing to copy\r"
 fi
+
+ILE=`leadingzeros $ILE`
 
 #Get sizes of files
 SIZE=0
@@ -229,24 +235,22 @@ echo "$SIZES" | sed -e '1d' > /tmp/sync.sizes
 while read f; do
 	g=`echo "$f" | sed -e 's/\:/\//g'`
 	h=`echo "$f" | sed -e 's/.mp3//g'`
-	if [ $CONVERT = 1 ] ; then
-		DISC=1
-		ARTIST=`echo "$h" | awk -F \: '{ print $1}' | \
-			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
-		ALBUM=`echo "$h" | awk -F \: '{ print $2}' | \
-			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
-		TRACK=`echo "$h" | awk -F \: '{ print $3}' | awk -F " " '{ print $1}'`
-		if [ `echo "$TRACK" | grep "-" | wc -l` -eq 1 ]; then
-			TRACK=`echo "$h" | awk -F \: '{ print $3}' | \
-				awk -F " " '{ print $1}' | \
-				awk -F "-" '{ print $2}'`
-			DISC=`echo "$h" | awk -F \: '{ print $3}' | \
-				awk -F " " '{ print $1}' | \
-				awk -F "-" '{ print $1}'`
-		fi
-		TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c4- | \
-			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+	DISC=1
+	ARTIST=`echo "$h" | awk -F \: '{ print $1}' | \
+		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+	ALBUM=`echo "$h" | awk -F \: '{ print $2}' | \
+		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+	TRACK=`echo "$h" | awk -F \: '{ print $3}' | awk -F " " '{ print $1}'`
+	if [ `echo "$TRACK" | grep "-" | wc -l` -eq 1 ]; then
+		TRACK=`echo "$h" | awk -F \: '{ print $3}' | \
+			awk -F " " '{ print $1}' | \
+			awk -F "-" '{ print $2}'`
+		DISC=`echo "$h" | awk -F \: '{ print $3}' | \
+			awk -F " " '{ print $1}' | \
+			awk -F "-" '{ print $1}'`
 	fi
+	TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c4- | \
+		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
@@ -266,11 +270,13 @@ while read f; do
 	bar2=`progress $PERCENT $WIDTH3`
 	echo -ne "$IE/$ILE ($PERCENTE%): > $h
 $bar2\r"
-	MP3DIR=`echo "$g" | awk -F \/ '{ print $1"\/"$2 }'`
+	MP3DIR=`echo "$g" | awk -F'/' '{ print $1"/"$2 }'`
 	if [ ! -d "$DAPDIR/$MP3DIR" ]; then
 		mkdir -p "$DAPDIR/$MP3DIR"
 		if [ $FOLDER -eq 1 ]; then
-			cp "$COVERDIR/$MP3DIR/cover.jpg" "$DAPDIR/$MP3DIR"
+			if [ -f "$MUSICDIR/$MP3DIR/"*".png" ]; then
+				cp "$MUSICDIR/$MP3DIR/"*".png" "$DAPDIR/$MP3DIR/cover.png"
+			fi
 		fi
 	fi
 	if [ $CONVERT = 1 ] ; then
@@ -278,13 +284,18 @@ $bar2\r"
 		lame --quiet -V$BITRATE "/tmp/$f" "/tmp/$f-low"
 		eyeD3 -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
 			--set-text-frame=TPOS:$DISC \
-			--add-image="$COVERDIR/$ARTIST/$ALBUM"/cover.jpg:FRONT_COVER \
+			--add-image="$DAPDIR/$MP3DIR/cover.png:FRONT_COVER" \
 			"/tmp/$f-low" \
 			&> /dev/null
 		cp "/tmp/$f-low" "$DAPDIR/$g"
 		rm "/tmp/$f" "/tmp/$f-low"
 	else
 		cp "$MUSICDIR/$g" "$DAPDIR/$g"
+		eyeD3 -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
+			--set-text-frame=TPOS:$DISC \
+			--add-image="$DAPDIR/$MP3DIR/cover.png:FRONT_COVER" \
+			"$DAPDIR/$g" \
+			&> /dev/null
 	fi
 	let I++
 done < /tmp/sync.4
@@ -296,10 +307,10 @@ Removing temp files and restore playlist"
 mv "$DAPDIR/$PLAYLIST.bak" "$DAPDIR/$PLAYLIST"
 rm /tmp/sync*
 #rm "$DAPDIR/._"*
-find "$DAPDIR" -type d -mindepth 2 -maxdepth 2 -exec \
+find "$DAPDIR" -mindepth 2 -maxdepth 2  -type d -exec \
 	sh -c 'set -- "$0"/*.mp3; ! [ -e "$1" ]' {} \;  -exec rm -rf {} \;
 #/Artist/Album. Even if album is empty, artist isn't. So check for empty aritsts
-find "$DAPDIR" -type d -empty -mindepth 1 -maxdepth 1 -exec rm -rf {} \;
+find "$DAPDIR" -mindepth 1 -maxdepth 1 -type d -empty -exec rm -rf {} \;
 ################################################################################
 
 ###################################AUTHOR: Jakub Tymejczyk######################
