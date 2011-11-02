@@ -201,7 +201,7 @@ cat /tmp/sync.4 | while read f; do
 	PERCENT=`leadingzeros $PERCENT`
 	IE=`leadingzeros $I`
 	echo "$IE/$ILE ($PERCENT%): < $h"
-	rm "$g"
+	rm "$DAPDIR/$g"
 	let I++
 done
 ################################################################################
