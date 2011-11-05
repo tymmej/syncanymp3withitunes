@@ -241,16 +241,24 @@ while read f; do
 	ALBUM=`echo "$h" | awk -F \: '{ print $2}' | \
 		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
 	TRACK=`echo "$h" | awk -F \: '{ print $3}' | awk -F " " '{ print $1}'`
-	if [ `echo "$TRACK" | grep "-" | wc -l` -eq 1 ]; then
-		TRACK=`echo "$h" | awk -F \: '{ print $3}' | \
-			awk -F " " '{ print $1}' | \
-			awk -F "-" '{ print $2}'`
-		DISC=`echo "$h" | awk -F \: '{ print $3}' | \
-			awk -F " " '{ print $1}' | \
-			awk -F "-" '{ print $1}'`
+	TEST=`echo "$TRACK" | sed 's/^[0-9]*//' | wc -c`
+	if [ $TEST -ne 1 ]; then
+		TITLE=`echo "$h" | awk -F \: '{ print $3}'`
+		TRACK=""
+	else
+		TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c4- | \
+			/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+		if [ `echo "$TRACK" | grep "-" | wc -l` -eq 1 ]; then
+			TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c6- | \
+				/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
+			TRACK=`echo "$h" | awk -F \: '{ print $3}' | \
+				awk -F " " '{ print $1}' | \
+				awk -F "-" '{ print $2}'`
+			DISC=`echo "$h" | awk -F \: '{ print $3}' | \
+				awk -F " " '{ print $1}' | \
+				awk -F "-" '{ print $1}'`
+		fi
 	fi
-	TITLE=`echo "$h" | awk -F \: '{ print $3}' | cut -c4- | \
-		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
@@ -279,7 +287,7 @@ $bar2\r"
 			fi
 		fi
 	fi
-	if [ $CONVERT = 1 ] ; then
+	if [ $CONVERT -eq 1 ] ; then
 		cp "$MUSICDIR/$g" "/tmp/$f"
 		lame --quiet -V$BITRATE "/tmp/$f" "/tmp/$f-low"
 		eyeD3 -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
@@ -291,11 +299,18 @@ $bar2\r"
 		rm "/tmp/$f" "/tmp/$f-low"
 	else
 		cp "$MUSICDIR/$g" "$DAPDIR/$g"
-		eyeD3 -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
-			--set-text-frame=TPOS:$DISC \
-			--add-image="$DAPDIR/$MP3DIR/cover.png:FRONT_COVER" \
-			"$DAPDIR/$g" \
-			&> /dev/null
+		if [ -f "$DAPDIR/$MP3DIR/cover.png" ]; then
+			eyeD3 --remove-all -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
+				--set-text-frame=TPOS:$DISC \
+				--add-image="$DAPDIR/$MP3DIR/cover.png:FRONT_COVER" \
+				"$DAPDIR/$g" \
+				&> /dev/null
+		else
+			eyeD3 --remove-all -a "$ARTIST" -A "$ALBUM" -t "$TITLE" -n "$TRACK" \
+ 				--set-text-frame=TPOS:$DISC \
+				"$DAPDIR/$g" \
+				&> /dev/null
+		fi
 	fi
 	let I++
 done < /tmp/sync.4
