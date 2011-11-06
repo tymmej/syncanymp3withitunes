@@ -241,7 +241,7 @@ while read f; do
 	ALBUM=`echo "$h" | awk -F \: '{ print $2}' | \
 		/opt/local/bin/iconv -f utf-8 -t ascii//translit//ignore`
 	TRACK=`echo "$h" | awk -F \: '{ print $3}' | awk -F " " '{ print $1}'`
-	TEST=`echo "$TRACK" | sed 's/^[0-9]*//' | wc -c`
+	TEST=`echo "$TRACK" | sed 's/^[0-9-]*//' | wc -c`
 	if [ $TEST -ne 1 ]; then
 		TITLE=`echo "$h" | awk -F \: '{ print $3}'`
 		TRACK=""
@@ -259,6 +259,8 @@ while read f; do
 				awk -F "-" '{ print $1}'`
 		fi
 	fi
+	#echo "$h"
+	#echo "$TITLE" : "$TRACK" : "$ALBUM" : "$ARTIST"
 	LENGTH=${#h}
 	if [ $LENGTH -gt $CUT1 ]; then
 		h=`echo "$h" | cut -c-$CUT2`
