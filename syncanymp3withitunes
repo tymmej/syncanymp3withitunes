@@ -181,7 +181,7 @@ if [ $ILE = 0 ]; then
 	echo -ne "Nothing to delete\r"
 fi
 
-ILE=`leadingzeros $ILE`
+ILE2=`leadingzeros $ILE`
 
 cat /tmp/sync.4 | while read f; do
 	g=`echo "$f" | sed -e 's/\:/\//g'`
@@ -200,7 +200,7 @@ cat /tmp/sync.4 | while read f; do
 	let PERCENT=($I*100)/$ILE
 	PERCENT=`leadingzeros $PERCENT`
 	IE=`leadingzeros $I`
-	echo "$IE/$ILE ($PERCENT%): < $h"
+	echo "$IE/$ILE2 ($PERCENT%): < $h"
 	rm "$DAPDIR/$g"
 	let I++
 done
@@ -258,6 +258,12 @@ while read f; do
 				awk -F " " '{ print $1}' | \
 				awk -F "-" '{ print $1}'`
 		fi
+	fi
+	if [ "$ARTIST" == "AC_DC" ]; then
+		ARTIST="AC/DC"
+	fi
+	if [ "$ARTIST" == "R.E.M_" ]; then
+		ARTIST="R.E.M."
 	fi
 	#echo "$h"
 	#echo "$TITLE" : "$TRACK" : "$ALBUM" : "$ARTIST"
